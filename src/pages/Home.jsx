@@ -8,7 +8,7 @@ import sunnyImage from '../assets/sunnyImg.jpg';
 import cloudyImage from '../assets/cloudyImg.jpg'; 
 import rainImage from '../assets/rainyImg.jpg';
 import { IoThunderstormOutline } from "react-icons/io5";
-
+import { MdOutlineDeleteOutline } from "react-icons/md";
 
 import Navbar from './Navbar';
 import {
@@ -31,6 +31,17 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from "@/components/ui/button"
 import { useNavigate } from 'react-router-dom';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 
 const Home = () => {
@@ -92,6 +103,27 @@ const Home = () => {
       }
   };
 
+  const handleRemoveLocation = async (location) =>{
+    if(!location){
+      toast.error("Location is required !!")
+    }
+    else{
+      axiosInstance.post('user/location-remove',{location}).then((response)=>{
+        if(response.data.statusCode<400){
+          toast.success("Location removed successfully !!")
+          setLoading(false)
+          window.location.reload();
+      }
+      else{
+          setLoading(false)
+          toast.error(response.data.message)
+      }
+      }).catch((error)=>{
+        toast.error(error.response.data.message || "Error removing location !!")
+      })
+    }
+  }
+
   const handleThresholdSubmit = async() => {
       if(!city || !param || !value){
         toast.error("Some fields are empty !!")
@@ -145,7 +177,6 @@ const Home = () => {
         {weatherData.map((weather, index) => (
             <div
                 key={index}
-                onClick={() => navigate(`/weather/${weather.location}`)}
                 className="rounded-xl shadow-xl p-8 flex flex-col justify-between transition-transform transform hover:scale-105 hover:shadow-2xl text-white"
                 style={{
                     backgroundImage: getWeatherBackground(weather.main),
@@ -155,10 +186,29 @@ const Home = () => {
                 }}
             >
                 <div className="flex justify-between text-black items-center mb-4">
+              
                     <h3 className="text-3xl font-bold">{weather.location}</h3>
+                    <div className='flex space-x-4'>
                     {getWeatherIcon(weather.main)}
+                    <AlertDialog>
+  <AlertDialogTrigger><MdOutlineDeleteOutline size={25} color='red'/></AlertDialogTrigger>
+  <AlertDialogContent>
+    <AlertDialogHeader>
+      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+      <AlertDialogDescription>
+        This action cannot be undone. This will delete this location from your profile, Although you can add it later on.
+      </AlertDialogDescription>
+    </AlertDialogHeader>
+    <AlertDialogFooter>
+      <AlertDialogCancel>Cancel</AlertDialogCancel>
+      <AlertDialogAction onClick={(e)=>{handleRemoveLocation(weather.location)}} className="bg-orange-400 hover:bg-green-500">Continue</AlertDialogAction>
+    </AlertDialogFooter>
+  </AlertDialogContent>
+</AlertDialog>
+</div>
                 </div>
-                <div className="space-y-3 text-black">
+                <div                 onClick={() => navigate(`/weather/${weather.location}`)}
+ className="space-y-3 text-black">
                     <p><strong>Temperature:</strong> {weather.temperature}°C</p>
                     <p><strong>Feels Like:</strong> {weather.feelsLike}°C</p>
                     <p><strong>Wind Speed:</strong> {weather.windSpeed} m/s</p>
