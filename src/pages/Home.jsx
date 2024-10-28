@@ -73,11 +73,22 @@ const Home = () => {
       toast.error("Location name cannot be empty !!")
     }
     else{
-      axiosInstance.post('user/location-add',{location}).then((response)=>{
+      await axiosInstance.post('user/location-add',{location}).then(async(response)=>{
         if(response.data.statusCode<400){
-          toast.success("Location added successfully !!")
-          setLoading(false)
-          window.location.reload();
+        await axiosInstance.post('weather/add-location',{location}).then((res)=>{
+            if(res.data.statusCode<400){
+              toast.success("Location added successfully !!")
+              setLoading(false)
+              window.location.reload();
+            }
+            else{
+              setLoading(false)
+              toast.error(response.data.message)
+          }
+          }).catch((err)=>{
+            toast.error(err.response.data.message || "Error adding location !!")
+          })
+          
       }
       else{
           setLoading(false)
